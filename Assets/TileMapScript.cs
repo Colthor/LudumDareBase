@@ -1,6 +1,43 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/*
+ *  Colthor's Tile Map Script for Ludum Dare
+ * 
+ *  Basic docs:
+ * This generates a map of Squares_X by Squares_Y tiles (which are each Square_Size units to a side) with auto-tiled walls
+ * (so they look like they're all joined neatly) and adds box colliders for the walls as children to the game object
+ * it's attached to. Which needs a mesh renderer, mesh filter, and probably a Rigidbody2D if you want the colliders to do much.
+ * 
+ * The texture required is a grid of 4 by 8 tiles, and internally they're thought of as the numbers:
+ * 
+ *  0  1  2  3
+ *  4  5  6  7
+ *  8  9 10 11
+ * 12 13 14 15
+ * 16 17 18 19
+ * 20 21 22 23
+ * 24 25 26 27
+ * 28 29 30 31
+ * 
+ * A sample texture, "32tiles.png", is included. It will probably make the following explanation clearer.
+ * The level data is simply an ascii string. Characters representing single hex digits, ie. '0' - 'F', are the first sixteen tiles. These aren't given colliders.
+ * The second 16 (ie. 16-31) are the auto-tiled walls, which're all represented by 'X'.
+ * These start at 16 and have a value added on based on if any of the adjacent tiles are walls, based on these numbers:
+ * 
+ *    1
+ * 8  0  2
+ *    4
+ * 
+ * Where 0 is the tile being calculated. This means a single wall is wall tile 0 (ie. 16) an L shape is wall tile 3 (ie. 19), | is wall 5, + is  wall 15 and so forth.
+ * 
+ * Any characters other than 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, A, B, C, D, E, F, X  in LevelData are ignored. Letters must be upper case.
+ * 
+ * It runs in edit mode, which means you can see the map in the editor - but it can't automatically delete children in edit mode yet, so you might have to occasionally 
+ * do that manually. As soon as you hit run they'll all be erased anyway, so that's not a problem at runtime. You can of course just prevent it executing in
+ * edit mode to fix the problem entirely...
+ */
+
 
 
 [ExecuteInEditMode]
@@ -18,16 +55,16 @@ public class TileMapScript : MonoBehaviour
 	public int Squares_X = 10;
 	public int Squares_Y = 10;
 	public int Square_Size = 64;
-	public string LevelData = "8888888888"
-							+ "8801234588"
-							+ "8086700808"
-							+ "8008008808"
-							+ "8800880888"
-							+ "8000880808"
-							+ "8008008808"
-							+ "8080GH0808"
-							+ "88ABCDEF88"
-							+ "8888888888";
+	public string LevelData = "XXXXXXXXXX"
+							+ "XX012345XX"
+							+ "X0X6700X0X"
+							+ "X0XX00XX0X"
+							+ "XXXXXX0XXX"
+							+ "X0X0XX0X0X"
+							+ "XX0X00XX0X"
+							+ "X0X0089X0X"
+							+ "XXABCDEFXX"
+							+ "XXXXXXXXXX";
 
 	// Use this for initialization
 	void Start ()
@@ -37,18 +74,26 @@ public class TileMapScript : MonoBehaviour
 
 	bool IsValidCharacter(char c)
 	{
-		return ('0' <= c && c <= '8') || ('A' <= c && c <= 'H');
+		return ('0' <= c && c <= '9') || ('A' <= c && c <= 'F') || c== 'X';
 	}
 
 	int CharacterToTileIndex(char c)
 	{
-		if ('0' <= c && c <= '8') 
+		if ('0' <= c && c <= '9') 
 		{
 			return c - '0';
 		}
+		else if ('A' <= c && c <= 'F')
+		{
+			return 10 + (c - 'A');
+		}
+		else if ( 'X' == c )
+		{
+			return 16;
+		}
 		else
 		{
-			return 24 + (c - 'A');
+			return 0;
 		}
 	}
 
@@ -85,7 +130,7 @@ public class TileMapScript : MonoBehaviour
 			{
 				MapArray[x, y].RawData = GetNextValidCharacter(LevelData, ref CharIndex);
 				MapArray[x, y].TextureNum = CharacterToTileIndex(MapArray[x, y].RawData);
-				MapArray[x, y].IsWall = (8 == MapArray[x, y].TextureNum);
+				MapArray[x, y].IsWall = (16 == MapArray[x, y].TextureNum);
 				MapArray[x, y].HasCollider = false;
 			}
 		}
