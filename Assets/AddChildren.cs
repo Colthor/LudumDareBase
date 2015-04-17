@@ -13,7 +13,7 @@ public class AddChildren : MonoBehaviour {
 				go.name = "Collider_("+x+","+y+")";
 				BoxCollider2D boxcoll = go.AddComponent<BoxCollider2D>();
 				boxcoll.size = new Vector2(1.0f,1.0f);
-				boxcoll.center= new Vector2(x, y);
+				boxcoll.offset= new Vector2(x, y);
 				go.transform.position = transform.position;
 				go.transform.parent = transform;
 			}

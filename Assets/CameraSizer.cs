@@ -19,7 +19,7 @@ public class CameraSizer : MonoBehaviour {
 		PrevWidth = Screen.width;
 		PrevHeight = Screen.height;
 		PrevPPU = PixelsPerUnit;
-		camera.orthographicSize = PrevHeight / (2.0f * PixelsPerUnit);
+		GetComponent<Camera>().orthographicSize = PrevHeight / (2.0f * PixelsPerUnit);
 	}
 	
 	// Update is called once per frame

@@ -191,7 +191,7 @@ public class TileMapScript : MonoBehaviour
 		float height = dy * Square_Size;
 		BoxCollider2D boxcoll = go.AddComponent<BoxCollider2D>();
 		boxcoll.size = new Vector2(width,height);
-		boxcoll.center= new Vector2(xMin*Square_Size + 0.5f*width, (Squares_Y*Square_Size) - (yMin*Square_Size + 0.5f*height));
+		boxcoll.offset= new Vector2(xMin*Square_Size + 0.5f*width, (Squares_Y*Square_Size) - (yMin*Square_Size + 0.5f*height));
 		go.transform.position = transform.position;
 		go.transform.rotation = transform.rotation;
 		go.transform.localScale = transform.lossyScale;
