@@ -26,6 +26,8 @@ Tilemap with auto-tiling and pathfinding
 
 IMPORTANT NOTE: Unity's anti-aliasing causes sub-pixel texture alignment errors in this code, and its graphics settings above "Good" include 2xAA as default. There are fudge factors (the two "Iota" parameters) available to try to work around this, but ideally just disable AA in higher quality settings (or the settings altogether). If you know a fix for this, please tell me!
 
+USERS OF PREVIOUS VERSIONS: Tile maps are now generated the opposite way up - to match Unity's co-ordinates, rather than be upside down. I don't know why I used the other method before, but it made pathfinding a nuisance.
+
 “Assets/TileMapScript.cs” is the tilemap. The .cs contains more thorough documentation, but it creates a Squares_X by Squares_Y tile grid, with each square Square_Size units to a side. It gets the data about which tile to use from LevelData, which is just a text string (0-9, A-F are ‘open’ tiles, X indicates a wall, all other characters should be ignored). “Assets/32tiles.png” is an example of the texture required.
 
 The script then auto-tiles the walls, selecting the correct tiles from the given texture, and then adds box colliders for the walls as children to the attached gameobject. To reduce the number of colliders it groups them to cover multiple walls where possible – first making it as many tiles wide as possible, then as many tiles high. It would be possible to use a single polygon collider with several paths, but it would also be considerably more work, sorry ;)  (And maybe not faster.)
