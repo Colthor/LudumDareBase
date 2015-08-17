@@ -55,6 +55,15 @@ public class TileMapScript : MonoBehaviour
 	public int Squares_X = 10;
 	public int Squares_Y = 10;
 	public int Square_Size = 64;
+	public bool Invert_Colliders = false; //if true doesn't generate colliders on walls, does on "empties".
+
+	//FUDGE FACTORS. The correct value for these is 0, but Unity's anti-aliasing causes alignment artifacts.
+	//Fiddling with them can reduce the artifacts. I found 0.000195 for TL to be about right, but YMMV.
+	//It maybe/shouldn't even happen on other systems...
+	//WARNING: Setting either of these too large will break 1:1 pixel mapping.
+	public float iotaTL = 0.0f; //0.000195f; //fudge factor to prevent texture alignment artifacts, top/left.
+	public float iotaBR = 0.0f; //fudge factor to prevent texture alignment artifacts, bottom/right.
+
 	public string LevelData = "XXXXXXXXXX"
 							+ "XX012345XX"
 							+ "X0X6700X0X"
@@ -65,6 +74,53 @@ public class TileMapScript : MonoBehaviour
 							+ "X0X0089X0X"
 							+ "XXABCDEFXX"
 							+ "XXXXXXXXXX";
+
+	PathfindingImpl pathfinder;
+
+	public Vector2[] GetPathGrid(int start_x, int start_y, int end_x, int end_y)
+	{
+		if(pathfinder == null) return null;
+
+		return pathfinder.FindPath(start_x, start_y, end_x, end_y);
+	}
+
+	public Vector2[] GetPath(Vector2 start, Vector2 end)
+	{
+		//convert model-space coords to grid squares, and back
+		int sx = (int)start.x/Square_Size, sy = (int)start.y/Square_Size;
+		int ex = (int)end.x/Square_Size, ey = (int)end.y/Square_Size;
+
+		if(sx == ex && sy == ey) //in same square already, just return end point.
+		{
+			if(CollideAtGrid(sx, sy)) return null;
+			Vector2[] rv = new Vector2[1];
+			rv[0] = end;
+			return rv;
+		}
+
+		Vector2[] points = GetPathGrid(sx, sy, ex, ey);
+		if(null == points) return null;
+		
+		Vector2 offset = start;
+		offset.x %= Square_Size;
+		offset.y %= Square_Size;
+		Vector2 off_step = end;
+		off_step.x %= Square_Size;
+		off_step.y %= Square_Size;
+		//offset = off_step;
+		off_step = (off_step - offset)/(float) (points.GetUpperBound(0)+1);
+
+		/*if(ex-sx != 0 && Mathf.Sign(off_step.x) != Mathf.Sign(ex-sx) ) off_step.x = 0f;
+		if(ey-sy != 0 && Mathf.Sign(off_step.y) != Mathf.Sign(ey-sy)) off_step.y = 0f;*/
+
+		for(int i = 0; i < points.GetUpperBound(0); i++)
+		{
+			points[i] = points[i]*Square_Size + offset + off_step * (i+1);
+		}
+		points[points.GetUpperBound(0)] = end;
+
+		return points;
+	}
 
 	// Use this for initialization
 	void Start ()
@@ -157,13 +213,25 @@ public class TileMapScript : MonoBehaviour
 		}
 	}
 
+	bool CollideAtGrid(int x, int y)
+	{
+		if(Invert_Colliders)
+		{
+			return !MapArray[x,y].IsWall;
+		}
+		else
+		{
+			return MapArray[x,y].IsWall;
+		}
+	}
+
 	void GenerateColliderAt(int xMin, int yMin)
 	{
 		int xMax = xMin;
 		int yMax = yMin;
 
 		//Find how far right the wall extends
-		while(xMax < Squares_X-1 && MapArray[xMax+1,yMin].IsWall && !MapArray[xMax+1, yMin].HasCollider)
+		while(xMax < Squares_X-1 && CollideAtGrid(xMax+1,yMin) && !MapArray[xMax+1, yMin].HasCollider)
 		{
 			xMax++;
 		}
@@ -174,7 +242,7 @@ public class TileMapScript : MonoBehaviour
 		{
 			for(int x = xMin; x <= xMax; x++)
 			{
-				if(!(MapArray[x,yMax+1].IsWall && !MapArray[x, yMax+1].HasCollider))
+				if(!(CollideAtGrid(x,yMax+1) && !MapArray[x, yMax+1].HasCollider))
 				{
 					TryNextRow = false;
 					x = xMax+1;
@@ -191,7 +259,7 @@ public class TileMapScript : MonoBehaviour
 		float height = dy * Square_Size;
 		BoxCollider2D boxcoll = go.AddComponent<BoxCollider2D>();
 		boxcoll.size = new Vector2(width,height);
-		boxcoll.offset= new Vector2(xMin*Square_Size + 0.5f*width, (Squares_Y*Square_Size) - (yMin*Square_Size + 0.5f*height));
+		boxcoll.offset= new Vector2(xMin*Square_Size + 0.5f*width, /*(Squares_Y*Square_Size) -*/ (yMin*Square_Size + 0.5f*height));
 		go.transform.position = transform.position;
 		go.transform.rotation = transform.rotation;
 		go.transform.localScale = transform.lossyScale;
@@ -213,7 +281,7 @@ public class TileMapScript : MonoBehaviour
 		{
 			for(int x = 0; x < Squares_X; x++)
 			{
-				if (MapArray[x, y].IsWall && !MapArray[x,y].HasCollider)
+				if (CollideAtGrid(x, y) && !MapArray[x,y].HasCollider)
 				{
 					GenerateColliderAt(x,y);
 				}
@@ -234,16 +302,15 @@ public class TileMapScript : MonoBehaviour
 	{
 		const int TEX_PACK_WIDTH = 4;
 		const int TEX_PACK_HEIGHT = 8;  // This is so textures can be power-of-two in both x and y;
-										// bottom two rows of squares currently unused.
 		float squareU = 1f/(float)TEX_PACK_WIDTH;
 		float squareV = 1f/(float)TEX_PACK_HEIGHT;
 		int tex_x = textureNum % TEX_PACK_WIDTH;
 		int tex_y = textureNum / TEX_PACK_WIDTH;
 		
-		uv[squareNum*4  ] = new Vector2( tex_x*squareU,     1f - (tex_y) * squareV ); // Unity's texture co-ords
-		uv[squareNum*4+1] = new Vector2( (tex_x+1)*squareU, 1f - (tex_y) * squareV ); // have (0,0) in the bottom
-		uv[squareNum*4+2] = new Vector2( tex_x*squareU,     1f - (tex_y+1)   * squareV ); // left. Ie. they're upside
-		uv[squareNum*4+3] = new Vector2( (tex_x+1)*squareU, 1f - (tex_y+1)   * squareV ); // down.
+		uv[squareNum*4  ] = new Vector2( tex_x*squareU + iotaTL,     1f - (tex_y) * squareV - iotaTL ); // Unity's texture co-ords
+		uv[squareNum*4+1] = new Vector2( (tex_x+1)*squareU - iotaBR, 1f - (tex_y) * squareV - iotaTL ); // have (0,0) in the bottom
+		uv[squareNum*4+2] = new Vector2( tex_x*squareU + iotaTL,     1f - (tex_y+1)   * squareV + iotaBR ); // left. Ie. they're upside
+		uv[squareNum*4+3] = new Vector2( (tex_x+1)*squareU - iotaBR, 1f - (tex_y+1)   * squareV + iotaBR ); // down.
 	}
 
 	public void GenerateMap()
@@ -268,17 +335,17 @@ public class TileMapScript : MonoBehaviour
 		{
 			for(int x = 0; x < Squares_X; x++)
 			{
-				verts[squareNum*4  ] = new Vector3(x*Square_Size,     (Squares_Y*Square_Size) - y*Square_Size, 0.0f);
-				verts[squareNum*4+1] = new Vector3((x+1)*Square_Size, (Squares_Y*Square_Size) - y*Square_Size, 0.0f);
-				verts[squareNum*4+2] = new Vector3(x*Square_Size,     (Squares_Y*Square_Size) - (y+1)*Square_Size, 0.0f);
-				verts[squareNum*4+3] = new Vector3((x+1)*Square_Size, (Squares_Y*Square_Size) - (y+1)*Square_Size, 0.0f);
+				verts[squareNum*4  ] = new Vector3(x*Square_Size,     /*(Squares_Y*Square_Size) -*/ y*Square_Size, 0.0f);
+				verts[squareNum*4+1] = new Vector3((x+1)*Square_Size, /*(Squares_Y*Square_Size) -*/ y*Square_Size, 0.0f);
+				verts[squareNum*4+2] = new Vector3(x*Square_Size,     /*(Squares_Y*Square_Size) -*/ (y+1)*Square_Size, 0.0f);
+				verts[squareNum*4+3] = new Vector3((x+1)*Square_Size, /*(Squares_Y*Square_Size) -*/ (y+1)*Square_Size, 0.0f);
 
 				tris[squareNum*6  ] = squareNum*4;
-				tris[squareNum*6+1] = squareNum*4+1;
-				tris[squareNum*6+2] = squareNum*4+2;
+				tris[squareNum*6+1] = squareNum*4+2;
+				tris[squareNum*6+2] = squareNum*4+1;
 				tris[squareNum*6+3] = squareNum*4+1;
-				tris[squareNum*6+4] = squareNum*4+3;
-				tris[squareNum*6+5] = squareNum*4+2;
+				tris[squareNum*6+4] = squareNum*4+2;
+				tris[squareNum*6+5] = squareNum*4+3;
 
 				normals[squareNum*4  ] = towardCamera;
 				normals[squareNum*4+1] = towardCamera;
@@ -312,6 +379,7 @@ public class TileMapScript : MonoBehaviour
 		mesh.normals = normals;
 		mesh.uv = uv;
 		GetComponent<MeshFilter>().mesh = mesh;
+		pathfinder = new PathfindingImpl(Squares_X, Squares_Y, CollideAtGrid);
 	}
 	
 	// Update is called once per frame

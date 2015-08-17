@@ -46,11 +46,16 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\AddChildren.cs" />
-     <Compile Include="Assets\CameraMenuScript.cs" />
-     <Compile Include="Assets\CameraSizer.cs" />
-     <Compile Include="Assets\Menu.cs" />
-     <Compile Include="Assets\TileMapScript.cs" />
+     <Compile Include="Assets\Scripts\AddChildren.cs" />
+     <Compile Include="Assets\Scripts\CameraMenuScript.cs" />
+     <Compile Include="Assets\Scripts\CameraSizer.cs" />
+     <Compile Include="Assets\Scripts\Menu.cs" />
+     <Compile Include="Assets\Scripts\PathFindTest.cs" />
+     <Compile Include="Assets\Scripts\PathfindingImpl.cs" />
+     <Compile Include="Assets\Scripts\PriorityQueue\HeapPriorityQueue.cs" />
+     <Compile Include="Assets\Scripts\PriorityQueue\IPriorityQueue.cs" />
+     <Compile Include="Assets\Scripts\PriorityQueue\PriorityQueueNode.cs" />
+     <Compile Include="Assets\Scripts\TileMapScript.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

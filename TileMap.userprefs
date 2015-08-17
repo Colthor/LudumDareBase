@@ -1,8 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace />
-  <MonoDevelop.Ide.Workbench ActiveDocument="..\..\Code\Menu\Assets\Menu.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\CameraSizer.cs">
     <Files>
-      <File FileName="..\..\Code\Menu\Assets\Menu.cs" Line="85" Column="59" />
+      <File FileName="Assets\Scripts\CameraSizer.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
