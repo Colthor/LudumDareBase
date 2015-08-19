@@ -18,7 +18,7 @@ Camera Script - 1:1 pixel mapping and simple 2D lighting
 
 “Assets/CameraSizer.cs” is the camera script, and it automatically adjusts Unity’s 2D camera so sprites are 1:1 mapped with the screen (or some multiple of). If the script’s PixelsPerUnit is the same as a sprite’s, it’ll be mapped 1:1. If it’s half the sprite’s the sprite will be pixel-doubled, and so on. Textures mapped to meshes (for instance, with the tilemap) or whatnot don’t work like this, o’course, so make sure you size them appropriately.
 
-It also includes toggleable multiplicative lighting. You must manually add the layer "Lights", then everything on that layer will be rendered to a texture (I suggest additive blending) instead of with the main camera, which is then rendered to a quad in front of the scene using multiplicative blending. Lights.scene provides an example using both sprites and particles.
+It also includes toggleable multiplicative lighting. You must manually add the layer "Lights", then everything on that layer will be rendered to a texture (I suggest additive blending) instead of with the main camera, which is then rendered to a quad in front of the scene using multiplicative blending. Lights.unity provides an example using both sprites and particles.
 
 
 Tilemap with auto-tiling and pathfinding
@@ -32,14 +32,14 @@ USERS OF PREVIOUS VERSIONS: Tile maps are now generated the opposite way up - to
 
 The script then auto-tiles the walls, selecting the correct tiles from the given texture, and then adds box colliders for the walls as children to the attached gameobject. To reduce the number of colliders it groups them to cover multiple walls where possible – first making it as many tiles wide as possible, then as many tiles high. It would be possible to use a single polygon collider with several paths, but it would also be considerably more work, sorry ;)  (And maybe not faster.)
 
-An example is in tileMap.scene.
+An example is in tileMap.unity.
 
-Pathfinding uses A*, and is demonstrated in Pathfinding.scene. Press space to generate new start/end points, and if there's a route between them it'll be drawn in the debug mode as a multicoloured line. The yellow line indicates the direct path between the two points. Note: diagonal paths are only generated if both squares either side of the path are clear, to avoid cutting corners.
+Pathfinding uses A*, and is demonstrated in Pathfinding.unity. Press space to generate new start/end points, and if there's a route between them it'll be drawn in the debug mode as a multicoloured line. The yellow line indicates the direct path between the two points. Note: diagonal paths are only generated if both squares either side of the path are clear, to avoid cutting corners.
 
 Menus
 -----
 
-Everybody hates UI coding and doesn't have time for it in a game jam, so a simple system (menus with buttons and option selectors) is included. See menu.scene for an example.
+Everybody hates UI coding and doesn't have time for it in a game jam, so a simple system (menus with buttons and option selectors) is included. See menu.unity for an example.
 
 
 
